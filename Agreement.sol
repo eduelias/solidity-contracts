@@ -1,4 +1,5 @@
 pragma solidity ^0.4.4;
+// 0x0965c80bc9385184e63af86a212c253a4a60c3a3  @thomson-reuters-ethereum-network
 contract eAgreement {
 
     // Function modifier that grants that the sender is the owner
