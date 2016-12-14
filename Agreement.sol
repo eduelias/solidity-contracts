@@ -6,8 +6,8 @@ contract eAgreement {
     address private owner;
     
     event SendMessage(string);
-    
     event Create(address[]);
+    event Signed(address, uint);
 
     // Function modifier that grants that the sender is the owner
     modifier isOwner {
@@ -113,5 +113,6 @@ contract eAgreement {
     function Sign() isSubscriber NotSignedYet {
         signedSubscribers.push(msg.sender);        
         SendMessage("Signed");
+        Signed(msg.sender, now);
     }
 }
