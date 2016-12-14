@@ -1,23 +1,25 @@
 pragma solidity ^0.4.4;
-// 0x0965c80bc9385184e63af86a212c253a4a60c3a3  @thomson-reuters-ethereum-network
+// 0x2aee116e2766e9f1256353eb6d719e46cb10a8c4  @thomson-reuters-ethereum-network
 contract eAgreement {
+    
+    event SendMessage(string);
 
     // Function modifier that grants that the sender is the owner
     modifier isOwner {
         if (msg.sender == owner) _;
+        else SendMessage("Not owner.");
     }
 
     // Function modifier that grants that the sender is a subscriber
     modifier isSubscriber {
-        for (uint i = 0; i < requiredSubscribers.length; i++) {
-            if (msg.sender == requiredSubscribers[i]) _;
-        }
+        if (findRequiredSubscriberIndex(msg.sender) == -1)
+            SendMessage("Not a subscriber.");
+        else _;
     }
 
     // Store the owner address
     address private owner;
-    // DateTime when this contract was created
-    uint64 private creationTime;
+    
     // Agreement content
     bytes private agreementText;
                 
@@ -29,8 +31,8 @@ contract eAgreement {
     // Constructor
     function eAgreement(bytes blob) {
         owner = msg.sender;
-        creationTime = uint64(now);
-        agreementText = blob;                
+        agreementText = blob;
+        SendMessage("Created");
     }    
        
     // Set a new owner to this contract
@@ -47,6 +49,7 @@ contract eAgreement {
         for (uint i = 0; i < members.length; i++) {
             requiredSubscribers.push(members[i]);      
         }  
+        SendMessage("Subscriber added");
     }
 
     function GetRequiredSubscribers() constant returns (address[]) {
@@ -92,16 +95,13 @@ contract eAgreement {
     }
 
     // This function will be called from an external contract just to sign
-    function Sign() returns (string) {
-        int subsid = findRequiredSubscriberIndex(msg.sender);
-        if (subsid == -1) return "the provided member is not a subscriber";
-
-        uint usubix = uint(subsid);        
-        
+    function Sign() isSubscriber {
         int sigix = findSignedSubscriberIndex(msg.sender);
-        if (sigix != -1) return "the member already signed this agreement";                
-
-        signedSubscribers.push(msg.sender);        
-        return "signature collected with success";
+        if (sigix != -1) { 
+            SendMessage("Already signed"); // not signed
+        } else  {                
+            signedSubscribers.push(msg.sender);        
+            SendMessage("Signed");
+        }
     }
 }
