@@ -5,9 +5,9 @@ contract eAgreement {
     // Store the owner address
     address private owner;
     
-    event SendMessage(string);
-    event Create(address[]);
-    event Signed(address, uint);
+    event SendMessage(string message);
+    event Create(address[] subscribers);
+    event Signed(address signer, uint timestamp);
 
     // Function modifier that grants that the sender is the owner
     modifier isOwner {
