@@ -3,6 +3,8 @@ pragma solidity ^0.4.4;
 contract eAgreement {
     
     event SendMessage(string);
+    
+    event Create(address[]);
 
     // Function modifier that grants that the sender is the owner
     modifier isOwner {
@@ -12,7 +14,7 @@ contract eAgreement {
 
     // Function modifier that grants that the sender is a subscriber
     modifier isSubscriber {
-        if (findRequiredSubscriberIndex(msg.sender) == -1)
+        if (msg.sender != owner && findRequiredSubscriberIndex(msg.sender) == -1)
             SendMessage("Not a subscriber.");
         else _;
     }
@@ -29,10 +31,11 @@ contract eAgreement {
     address[] signedSubscribers;      
 
     // Constructor
-    function eAgreement(bytes blob) {
+    function eAgreement(bytes blob, address[] parts) {
         owner = msg.sender;
         agreementText = blob;
-        SendMessage("Created");
+        requiredSubscribers = parts;
+        Create(parts);
     }    
        
     // Set a new owner to this contract
