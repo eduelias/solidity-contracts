@@ -1,6 +1,9 @@
 pragma solidity ^0.4.4;
-// 0x2aee116e2766e9f1256353eb6d719e46cb10a8c4  @thomson-reuters-ethereum-network
+// 0xb6b270ac52b0f0e8341ccc4f96bc42619bf67581 @thomson-reuters-ethereum-network
 contract eAgreement {
+    
+    // Store the owner address
+    address private owner;
     
     event SendMessage(string);
     
@@ -14,13 +17,17 @@ contract eAgreement {
 
     // Function modifier that grants that the sender is a subscriber
     modifier isSubscriber {
-        if (msg.sender != owner && findRequiredSubscriberIndex(msg.sender) == -1)
+        if (findRequiredSubscriberIndex(msg.sender) == -1)
             SendMessage("Not a subscriber.");
         else _;
     }
-
-    // Store the owner address
-    address private owner;
+    
+    // people that not signed yet
+    modifier NotSignedYet {
+        int sigix = findSignedSubscriberIndex(msg.sender);
+        if (sigix != -1) SendMessage("Already signed");
+        else _;
+    }
     
     // Agreement content
     bytes private agreementText;
@@ -48,11 +55,16 @@ contract eAgreement {
         requiredSubscribers.push(member);        
     }
 
-    function AddSubscribers(address[] members) isOwner {        
+    function AddSubscribers(address[] members) isOwner { 
         for (uint i = 0; i < members.length; i++) {
-            requiredSubscribers.push(members[i]);      
+            int minx = findSignedSubscriberIndex(members[i]);
+            if (minx == -1) {
+                requiredSubscribers.push(members[i]);      
+                SendMessage("Subscriber added");
+            }
+            else 
+                SendMessage("Already signed.");
         }  
-        SendMessage("Subscriber added");
     }
 
     function GetRequiredSubscribers() constant returns (address[]) {
@@ -86,25 +98,20 @@ contract eAgreement {
     // Removes a subscriber from the default subscriber list
     function RemoveSubscriber(address member) isOwner {
         // only allow removing of required subscribers if no one signed
-        if (signedSubscribers.length > 0) return; 
-
-        int i = findRequiredSubscriberIndex(member);
-        if (i != -1) delete requiredSubscribers[uint(i)];    
+        if (signedSubscribers.length == 0) {
+            int i = findRequiredSubscriberIndex(member);
+            if (i != -1) delete requiredSubscribers[uint(i)];
+        }
     }
 
     // reads the content of the contract
-    function ReadContent() constant returns (bytes) {
+    function ReadContent() isSubscriber constant returns (bytes) {
         return agreementText;
     }
 
     // This function will be called from an external contract just to sign
-    function Sign() isSubscriber {
-        int sigix = findSignedSubscriberIndex(msg.sender);
-        if (sigix != -1) { 
-            SendMessage("Already signed"); // not signed
-        } else  {                
-            signedSubscribers.push(msg.sender);        
-            SendMessage("Signed");
-        }
+    function Sign() isSubscriber NotSignedYet {
+        signedSubscribers.push(msg.sender);        
+        SendMessage("Signed");
     }
 }
