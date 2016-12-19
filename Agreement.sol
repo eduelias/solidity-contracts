@@ -1,14 +1,12 @@
-pragma solidity ^0.4.4;
-// 0xb6b270ac52b0f0e8341ccc4f96bc42619bf67581 @thomson-reuters-ethereum-network
+pragma solidity ^0.4.6;
+//@thomson-reuters-ethereum-edgware-network
 contract eAgreement {
     
     // Store the owner address
     address private owner;
     
     event SendMessage(string message);
-    event Create(address[] subscribers);
-    event Signed(address signer, uint timestamp);
-
+    
     // Function modifier that grants that the sender is the owner
     modifier isOwner {
         if (msg.sender == owner) _;
@@ -41,8 +39,10 @@ contract eAgreement {
     function eAgreement(bytes blob, address[] parts) {
         owner = msg.sender;
         agreementText = blob;
-        requiredSubscribers = parts;
-        Create(parts);
+        for (uint i = 0; i < parts.length; i++) {
+            requiredSubscribers.push(parts[i]);
+        }
+        SendMessage("Created");
     }    
        
     // Set a new owner to this contract
@@ -52,19 +52,13 @@ contract eAgreement {
 
     // Adds a subscriber to the default subscribers list
     function AddSubscriber(address member) isOwner {        
-        requiredSubscribers.push(member);        
-    }
-
-    function AddSubscribers(address[] members) isOwner { 
-        for (uint i = 0; i < members.length; i++) {
-            int minx = findSignedSubscriberIndex(members[i]);
-            if (minx == -1) {
-                requiredSubscribers.push(members[i]);      
-                SendMessage("Subscriber added");
-            }
-            else 
-                SendMessage("Already signed.");
-        }  
+        int ix = findRequiredSubscriberIndex(member);  
+        if (ix == -1) {
+            requiredSubscribers.push(member);      
+            SendMessage("Subscriber added");
+        } else {
+            SendMessage("Already a subscriber");
+        }
     }
 
     function GetRequiredSubscribers() constant returns (address[]) {
@@ -113,6 +107,5 @@ contract eAgreement {
     function Sign() isSubscriber NotSignedYet {
         signedSubscribers.push(msg.sender);        
         SendMessage("Signed");
-        Signed(msg.sender, now);
     }
 }
