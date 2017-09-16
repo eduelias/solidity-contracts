@@ -1,6 +1,6 @@
-pragma solidity ^0.4.6;
-//@thomson-reuters-ethereum-edgware-network
-contract eAgreement {
+pragma solidity ^0.4.16;
+
+contract SmartAgreement {
     
     // Store the owner address
     address private owner;
@@ -9,22 +9,27 @@ contract eAgreement {
     
     // Function modifier that grants that the sender is the owner
     modifier isOwner {
-        if (msg.sender == owner) _;
-        else SendMessage("Not owner.");
+        if (msg.sender == owner) 
+            _;
+        else 
+            SendMessage("Not owner.");
     }
 
     // Function modifier that grants that the sender is a subscriber
     modifier isSubscriber {
         if (findRequiredSubscriberIndex(msg.sender) == -1)
             SendMessage("Not a subscriber.");
-        else _;
+        else 
+            _;
     }
     
     // people that not signed yet
-    modifier NotSignedYet {
+    modifier notSignedYet {
         int sigix = findSignedSubscriberIndex(msg.sender);
-        if (sigix != -1) SendMessage("Already signed");
-        else _;
+        if (sigix != -1) 
+            SendMessage("Already signed");
+        else 
+            _;
     }
     
     // Agreement content
@@ -46,12 +51,12 @@ contract eAgreement {
     }    
        
     // Set a new owner to this contract
-    function SetOwner(address newOwner) isOwner {
+    function setOwner(address newOwner) isOwner {
         owner = newOwner;
     }
 
     // Adds a subscriber to the default subscribers list
-    function AddSubscriber(address member) isOwner {        
+    function addSubscriber(address member) isOwner {        
         int ix = findRequiredSubscriberIndex(member);  
         if (ix == -1) {
             requiredSubscribers.push(member);      
@@ -61,11 +66,11 @@ contract eAgreement {
         }
     }
 
-    function GetRequiredSubscribers() constant returns (address[]) {
+    function getRequiredSubscribers() constant returns (address[]) {
         return requiredSubscribers;
     }
 
-    function GetSignedSubscribers() constant returns (address[]) {         
+    function getSignedSubscribers() constant returns (address[]) {         
         return signedSubscribers;
     }
 
@@ -90,21 +95,22 @@ contract eAgreement {
     }
 
     // Removes a subscriber from the default subscriber list
-    function RemoveSubscriber(address member) isOwner {
+    function removeSubscriber(address member) isOwner {
         // only allow removing of required subscribers if no one signed
         if (signedSubscribers.length == 0) {
             int i = findRequiredSubscriberIndex(member);
-            if (i != -1) delete requiredSubscribers[uint(i)];
+            if (i != -1) 
+                delete requiredSubscribers[uint(i)];
         }
     }
 
     // reads the content of the contract
-    function ReadContent() isSubscriber constant returns (bytes) {
+    function readContent() isSubscriber constant returns (bytes) {
         return agreementText;
     }
 
     // This function will be called from an external contract just to sign
-    function Sign() isSubscriber NotSignedYet {
+    function sign() isSubscriber notSignedYet {
         signedSubscribers.push(msg.sender);        
         SendMessage("Signed");
     }
