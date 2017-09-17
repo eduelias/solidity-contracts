@@ -1,4 +1,4 @@
-pragma solidity ^0.4.16;
+pragma solidity ^0.4.15;
 
 contract SmartAgreement {
     
@@ -33,18 +33,27 @@ contract SmartAgreement {
     }
     
     // Agreement content
-    bytes private agreementText;
-                
+    bytes private agreementText;                
+
+    struct Index {
+        uint index;
+        bool set;
+    }
+
     // List of default subscribers to this contract
     address[] requiredSubscribers;    
+    mapping (address => Index) reqIndex;
     // List of signed subscribers
     address[] signedSubscribers;      
+    mapping (address => Index) sigIndex;
 
     // Constructor
-    function eAgreement(bytes blob, address[] parts) {
+    function SmartAgreement(bytes blob, address[] parts) {
         owner = msg.sender;
         agreementText = blob;
         for (uint i = 0; i < parts.length; i++) {
+            reqIndex[parts[i]].index = i;
+            reqIndex[parts[i]].set = true;
             requiredSubscribers.push(parts[i]);
         }
         SendMessage("Created");
@@ -59,6 +68,9 @@ contract SmartAgreement {
     function addSubscriber(address member) isOwner {        
         int ix = findRequiredSubscriberIndex(member);  
         if (ix == -1) {
+            reqIndex[member].index = requiredSubscribers.length - 1;
+            reqIndex[member].set = true;
+
             requiredSubscribers.push(member);      
             SendMessage("Subscriber added");
         } else {
@@ -75,22 +87,17 @@ contract SmartAgreement {
     }
 
     // Finds a required subscriber index by its address
-    function findRequiredSubscriberIndex(address member) private returns(int) {
-        for (uint i = 0; i < requiredSubscribers.length; i++) {
-                if (member == requiredSubscribers[i]) {
-                    return int(i);
-            }
-        }
+    function findRequiredSubscriberIndex(address member) constant private returns(int) {
+        if (reqIndex[member].set)
+            return int(reqIndex[member].index);
+
         return -1;
     }
 
     // Finds a required subscriber index by its address
-    function findSignedSubscriberIndex(address member) private returns(int) {
-        for (uint i = 0; i < signedSubscribers.length; i++) {
-                if (member == signedSubscribers[i]) {
-                    return int(i);
-            }
-        }
+    function findSignedSubscriberIndex(address member) constant private returns(int) {
+        if (sigIndex[member].set) 
+            return int(sigIndex[member].index);        
         return -1;
     }
 
