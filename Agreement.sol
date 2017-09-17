@@ -1,9 +1,31 @@
 pragma solidity ^0.4.15;
 
+/*
+*   Stores and written agreement
+*   Accepts addresses as subscribers
+*   Each subscriber can sign once
+*/
 contract SmartAgreement {
     
     // Store the owner address
     address private owner;
+
+    // Agreement content
+    bytes private agreementText;                
+
+    // Stores the index of subscriber
+    struct Index {
+        uint index;
+        bool set;
+    }
+
+    // List of default subscribers to this contract
+    address[] requiredSubscribers;    
+    mapping (address => Index) reqIndex;
+
+    // List of signed subscribers
+    address[] signedSubscribers;      
+    mapping (address => Index) sigIndex;
     
     event SendMessage(string message);
     
@@ -31,21 +53,6 @@ contract SmartAgreement {
         else 
             _;
     }
-    
-    // Agreement content
-    bytes private agreementText;                
-
-    struct Index {
-        uint index;
-        bool set;
-    }
-
-    // List of default subscribers to this contract
-    address[] requiredSubscribers;    
-    mapping (address => Index) reqIndex;
-    // List of signed subscribers
-    address[] signedSubscribers;      
-    mapping (address => Index) sigIndex;
 
     // Constructor
     function SmartAgreement(bytes blob, address[] parts) {
@@ -78,10 +85,12 @@ contract SmartAgreement {
         }
     }
 
+    // Public function that returns a list of required subscribers
     function getRequiredSubscribers() constant returns (address[]) {
         return requiredSubscribers;
     }
 
+    // Public function that returns a list of already signed subscribers
     function getSignedSubscribers() constant returns (address[]) {         
         return signedSubscribers;
     }
@@ -97,7 +106,8 @@ contract SmartAgreement {
     // Finds a required subscriber index by its address
     function findSignedSubscriberIndex(address member) constant private returns(int) {
         if (sigIndex[member].set) 
-            return int(sigIndex[member].index);        
+            return int(sigIndex[member].index);   
+
         return -1;
     }
 
